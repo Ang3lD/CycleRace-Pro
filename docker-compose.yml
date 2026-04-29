@@ -1,0 +1,182 @@
+# ==============================================
+# CycleRace Pro — Docker Compose
+# 5 Bases de Datos Independientes (Database per Service)
+# ==============================================
+# Levantar:   docker compose up -d
+# Detener:    docker compose down
+# Con datos:  docker compose down -v  (elimina volúmenes)
+# ==============================================
+
+services:
+
+  # ───────────────────────────────────────────────
+  # 1. PostgreSQL — Auth Service
+  # ───────────────────────────────────────────────
+  cyclerace-postgres:
+    image: postgres:16-alpine
+    container_name: cyclerace-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_secret_2026
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────
+  # 2. MySQL — Registration Service
+  # ───────────────────────────────────────────────
+  cyclerace-mysql:
+    image: mysql:8.0
+    container_name: cyclerace-mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: registration_db
+      MYSQL_USER: registration_user
+      MYSQL_PASSWORD: registration_secret_2026
+      MYSQL_ROOT_PASSWORD: root_secret_2026
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────
+  # 3. MongoDB — Payment Service
+  # ───────────────────────────────────────────────
+  cyclerace-mongo:
+    image: mongo:7
+    container_name: cyclerace-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: payment_admin
+      MONGO_INITDB_ROOT_PASSWORD: payment_secret_2026
+      MONGO_INITDB_DATABASE: payment_db
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/init/mongo:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────
+  # 4. Redis — Competitor Service
+  # ───────────────────────────────────────────────
+  cyclerace-redis:
+    image: redis:7-alpine
+    container_name: cyclerace-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass competitor_secret_2026
+    volumes:
+      - redis_data:/data
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "competitor_secret_2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────
+  # 5. MongoDB (2da instancia) — Reports Service
+  # ───────────────────────────────────────────────
+  cyclerace-mongo-reports:
+    image: mongo:7
+    container_name: cyclerace-mongo-reports
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: reports_admin
+      MONGO_INITDB_ROOT_PASSWORD: reports_secret_2026
+      MONGO_INITDB_DATABASE: reports_db
+    volumes:
+      - mongo_reports_data:/data/db
+      - ./docker/init/mongo-reports:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ───────────────────────────────────────────────
+  # Admin UIs (Desarrollo)
+  # ───────────────────────────────────────────────
+  adminer:
+    image: adminer:latest
+    container_name: cyclerace-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - cyclerace-network
+    depends_on:
+      - cyclerace-postgres
+      - cyclerace-mysql
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: cyclerace-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: payment_admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: payment_secret_2026
+      ME_CONFIG_MONGODB_URL: mongodb://payment_admin:payment_secret_2026@cyclerace-mongo:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    networks:
+      - cyclerace-network
+    depends_on:
+      - cyclerace-mongo
+
+# ───────────────────────────────────────────────
+# Volumes
+# ───────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  mysql_data:
+    driver: local
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongo_reports_data:
+    driver: local
+
+# ───────────────────────────────────────────────
+# Network
+# ───────────────────────────────────────────────
+networks:
+  cyclerace-network:
+    driver: bridge
+    name: cyclerace-network
