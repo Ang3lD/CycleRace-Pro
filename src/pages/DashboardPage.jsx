@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   Users, CreditCard, QrCode, BarChart3, CheckCircle2,
   XCircle, Clock, Search, Filter, Eye, ChevronDown,
   TrendingUp, DollarSign, UserCheck, AlertTriangle,
-  Loader2, ShieldCheck, LogOut
+  Loader2, ShieldCheck, LogOut, PlusCircle
 } from 'lucide-react'
 import './DashboardPage.css'
 
@@ -17,6 +18,14 @@ export default function DashboardPage() {
   const [allUsers, setAllUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(null)
+  
+  // Create Event Modal state
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [newEvent, setNewEvent] = useState({
+    nombre: '', descripcion: '', tipo: 'carrera', distancia: '', categoria: 'todos',
+    precio: '', cupo_maximo: '', fecha_evento: '', hora_evento: '', lugar: ''
+  })
+  const [createLoading, setCreateLoading] = useState(false)
 
   useEffect(() => {
     loadDashboard()
@@ -76,6 +85,37 @@ export default function DashboardPage() {
     }
   }
 
+  const handleCreateEvent = async (e) => {
+    e.preventDefault()
+    setCreateLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/eventos`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...newEvent,
+          precio: Number(newEvent.precio),
+          cupo_maximo: Number(newEvent.cupo_maximo),
+          distancia: Number(newEvent.distancia)
+        })
+      })
+      if (res.ok) {
+        alert('Evento creado exitosamente')
+        setShowCreateModal(false)
+        setNewEvent({nombre: '', descripcion: '', tipo: 'carrera', distancia: '', categoria: 'todos', precio: '', cupo_maximo: '', fecha_evento: '', hora_evento: '', lugar: ''})
+      } else {
+        alert('Error al crear el evento')
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCreateLoading(false)
+    }
+  }
+
   const filtered = inscripciones.filter(c => {
     const matchSearch = c.nombre_completo?.toLowerCase().includes(search.toLowerCase()) ||
                         c.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -109,8 +149,13 @@ export default function DashboardPage() {
             <p className="dash-header__sub">Panel de gestión de eventos, corredores y validación de pagos</p>
           </div>
           <div className="dash-header__right">
-            <div className="dash-header__badge badge">
-              <ShieldCheck size={14} /> Admin: {user?.nombre}
+            <div className="dashboard__actions">
+              <button className="btn btn-secondary" onClick={() => setShowCreateModal(true)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                <PlusCircle size={18} /> Añadir Evento
+              </button>
+              <Link to="/analizador" className="btn btn-primary">
+                <ShieldCheck size={18} /> Consola del Analizador
+              </Link>
             </div>
           </div>
         </div>
@@ -291,6 +336,78 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {showCreateModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{maxWidth: '600px'}}>
+            <div className="modal-header">
+              <h2>Crear Nuevo Evento</h2>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)}><XCircle size={24} /></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleCreateEvent} className="auth-form" style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                <div className="form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Nombre del Evento</label>
+                  <input type="text" required value={newEvent.nombre} onChange={e => setNewEvent({...newEvent, nombre: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Descripción</label>
+                  <textarea required value={newEvent.descripcion} onChange={e => setNewEvent({...newEvent, descripcion: e.target.value})} className="form-input" rows="3" />
+                </div>
+                <div className="form-group">
+                  <label>Tipo</label>
+                  <select value={newEvent.tipo} onChange={e => setNewEvent({...newEvent, tipo: e.target.value})} className="form-input">
+                    <option value="carrera">Carrera</option>
+                    <option value="paseo">Paseo</option>
+                    <option value="tour">Tour</option>
+                    <option value="taller">Taller</option>
+                    <option value="exhibicion">Exhibición</option>
+                    <option value="competencia">Competencia</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Categoría</label>
+                  <select value={newEvent.categoria} onChange={e => setNewEvent({...newEvent, categoria: e.target.value})} className="form-input">
+                    <option value="todos">Todos</option>
+                    <option value="infantil">Infantil</option>
+                    <option value="juvenil">Juvenil</option>
+                    <option value="adultos">Adultos</option>
+                    <option value="damas">Damas</option>
+                    <option value="master">Master</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Fecha del Evento</label>
+                  <input type="date" required value={newEvent.fecha_evento} onChange={e => setNewEvent({...newEvent, fecha_evento: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group">
+                  <label>Hora</label>
+                  <input type="time" required value={newEvent.hora_evento} onChange={e => setNewEvent({...newEvent, hora_evento: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group">
+                  <label>Precio ($)</label>
+                  <input type="number" required min="0" value={newEvent.precio} onChange={e => setNewEvent({...newEvent, precio: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group">
+                  <label>Cupo Máximo</label>
+                  <input type="number" required min="1" value={newEvent.cupo_maximo} onChange={e => setNewEvent({...newEvent, cupo_maximo: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Lugar</label>
+                  <input type="text" required value={newEvent.lugar} onChange={e => setNewEvent({...newEvent, lugar: e.target.value})} className="form-input" />
+                </div>
+                <div className="form-group" style={{gridColumn: '1 / -1'}}>
+                  <label>Distancia (Km) - Opcional</label>
+                  <input type="number" value={newEvent.distancia} onChange={e => setNewEvent({...newEvent, distancia: e.target.value})} className="form-input" />
+                </div>
+                <button type="submit" disabled={createLoading} className="btn btn-primary" style={{gridColumn: '1 / -1', marginTop: '10px'}}>
+                  {createLoading ? 'Creando...' : 'Guardar Evento'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

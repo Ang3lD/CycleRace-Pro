@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import {
   Bike, Trophy, Users, Calendar, MapPin, Clock, Search, Filter,
   ArrowRight, CheckCircle2, Loader2, AlertCircle, Star,
-  Mountain, Wrench, Eye, Route, Zap, Tag
+  Mountain, Wrench, Eye, Route, Zap, Tag, Info, XCircle
 } from 'lucide-react'
 import './EventosPage.css'
 
@@ -26,7 +26,9 @@ export default function EventosPage() {
   const [tipoFilter, setTipoFilter] = useState('todos')
   const [enrolling, setEnrolling] = useState(null)
   const [enrolledIds, setEnrolledIds] = useState(new Set())
+  const [enrollments, setEnrollments] = useState([])
   const [message, setMessage] = useState(null)
+  const [selectedEvento, setSelectedEvento] = useState(null)
 
   useEffect(() => {
     loadEventos()
@@ -52,6 +54,7 @@ export default function EventosPage() {
       })
       if (res.ok) {
         const data = await res.json()
+        setEnrollments(data)
         setEnrolledIds(new Set(data.map(i => i.evento_id)))
       }
     } catch {}
@@ -143,7 +146,7 @@ export default function EventosPage() {
             const isEnrolled = enrolledIds.has(evento.id)
             const isEnrolling = enrolling === evento.id
             return (
-              <div key={evento.id} className="evento-card card" id={`evento-${evento.id}`}>
+              <div key={evento.id} className="evento-card card" id={`evento-${evento.id}`} onClick={() => setSelectedEvento(evento)} style={{cursor: 'pointer'}}>
                 <div className="evento-card__header" style={{ borderColor: config.color }}>
                   <div className="evento-card__tipo" style={{ color: config.color, background: `${config.color}15` }}>
                     {config.icon} {config.label}
@@ -187,14 +190,17 @@ export default function EventosPage() {
                 </div>
 
                 <div className="evento-card__footer">
+                  <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); setSelectedEvento(evento); }}>
+                    <Info size={16} /> Detalles
+                  </button>
                   {isEnrolled ? (
-                    <button className="btn btn-secondary btn-sm evento-card__btn evento-card__btn--enrolled" disabled>
+                    <button className="btn btn-secondary btn-sm evento-card__btn evento-card__btn--enrolled" disabled onClick={e => e.stopPropagation()}>
                       <CheckCircle2 size={16} /> Ya inscrito
                     </button>
                   ) : (
                     <button
                       className="btn btn-primary btn-sm evento-card__btn"
-                      onClick={() => handleInscribirse(evento.id)}
+                      onClick={(e) => { e.stopPropagation(); handleInscribirse(evento.id); }}
                       disabled={isEnrolling}
                     >
                       {isEnrolling ? (
@@ -218,6 +224,81 @@ export default function EventosPage() {
           </div>
         )}
       </div>
+
+      {selectedEvento && (
+        <div className="modal-overlay" onClick={() => setSelectedEvento(null)}>
+          <div className="modal-content" style={{maxWidth: '500px'}} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{selectedEvento.nombre}</h2>
+              <button className="modal-close" onClick={() => setSelectedEvento(null)}><XCircle size={24} /></button>
+            </div>
+            <div className="modal-body" style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <div style={{background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '8px'}}>
+                <p style={{margin: 0, lineHeight: '1.6'}}>{selectedEvento.descripcion}</p>
+              </div>
+              
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                <div style={{background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px'}}>
+                  <span style={{color: 'var(--text-muted)', fontSize: '0.8rem'}}>Fecha y Hora</span>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px'}}>
+                    <Calendar size={16} color="var(--sky-400)" />
+                    <span style={{fontWeight: 'bold'}}>{new Date(selectedEvento.fecha_evento).toLocaleDateString()} {selectedEvento.hora_inicio?.slice(0, 5) || '08:00'}</span>
+                  </div>
+                </div>
+                
+                <div style={{background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px'}}>
+                  <span style={{color: 'var(--text-muted)', fontSize: '0.8rem'}}>Faltan</span>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px'}}>
+                    <Clock size={16} color="var(--orange-400)" />
+                    <span style={{fontWeight: 'bold'}}>
+                      {Math.max(0, Math.ceil((new Date(selectedEvento.fecha_evento) - new Date()) / (1000 * 60 * 60 * 24)))} días
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px'}}>
+                <span style={{color: 'var(--text-muted)', fontSize: '0.8rem'}}>Ubicación</span>
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px', marginTop: '5px'}}>
+                  <MapPin size={16} color="var(--emerald-400)" />
+                  <span style={{fontWeight: 'bold'}}>{selectedEvento.lugar || selectedEvento.ubicacion}</span>
+                </div>
+              </div>
+              
+              <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
+                <div style={{flex: 1, background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', textAlign: 'center'}}>
+                  <span style={{color: 'var(--text-muted)', fontSize: '0.8rem', display: 'block'}}>Precio</span>
+                  <span style={{fontWeight: 'bold', fontSize: '1.2rem'}}>${selectedEvento.precio} MXN</span>
+                </div>
+                <div style={{flex: 1, background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '8px', textAlign: 'center'}}>
+                  <span style={{color: 'var(--text-muted)', fontSize: '0.8rem', display: 'block'}}>Cupo Restante</span>
+                  <span style={{fontWeight: 'bold', fontSize: '1.2rem'}}>{selectedEvento.cupo_maximo}</span>
+                </div>
+              </div>
+
+              <div style={{marginTop: '15px'}}>
+                {enrolledIds.has(selectedEvento.id) ? (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+                    <div style={{background: 'rgba(52, 211, 153, 0.1)', border: '1px solid var(--emerald-400)', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                      <span style={{color: 'var(--emerald-400)', fontSize: '0.9rem', display: 'block', marginBottom: '5px'}}>Tu Número de Competidor</span>
+                      <span style={{fontWeight: '800', fontSize: '2rem', color: 'var(--text-primary)'}}>
+                        #{enrollments.find(e => e.evento_id === selectedEvento.id)?.numero_competidor || 'PENDIENTE'}
+                      </span>
+                    </div>
+                    <button className="btn btn-secondary" style={{width: '100%'}} disabled>
+                      <CheckCircle2 size={18} /> Ya estás inscrito
+                    </button>
+                  </div>
+                ) : (
+                  <button className="btn btn-primary" style={{width: '100%'}} onClick={() => handleInscribirse(selectedEvento.id)}>
+                    Inscribirse Ahora <ArrowRight size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

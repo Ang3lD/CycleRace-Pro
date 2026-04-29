@@ -11,6 +11,7 @@ import EventosPage from './pages/EventosPage'
 import MisEventosPage from './pages/MisEventosPage'
 import PaymentPage from './pages/PaymentPage'
 import DocsPage from './pages/DocsPage'
+import AnalyzerPage from './pages/AnalyzerPage'
 
 // Protected route — only authenticated users
 function ProtectedRoute({ children }) {
@@ -54,6 +55,9 @@ function App() {
           {/* Admin only */}
           <Route path="/dashboard" element={
             <AdminRoute><DashboardPage /></AdminRoute>
+          } />
+          <Route path="/analizador" element={
+            <AdminRoute><AnalyzerPage /></AdminRoute>
           } />
           
           {/* Hidden route - only accessible via URL bar */}

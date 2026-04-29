@@ -258,6 +258,28 @@ app.get('/api/eventos/:id', async (req, res) => {
   }
 });
 
+// POST /api/eventos — Admin only: Create new event
+app.post('/api/eventos', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { nombre, descripcion, tipo, distancia, categoria, precio, cupo_maximo, fecha_evento, hora_evento, lugar } = req.body;
+    
+    if (!nombre || !descripcion || !fecha_evento) {
+      return res.status(400).json({ error: 'Faltan campos obligatorios' });
+    }
+
+    const [result] = await mysqlPool.query(
+      `INSERT INTO eventos (nombre, descripcion, tipo, distancia, categoria, precio, cupo_maximo, fecha_evento, hora_evento, lugar) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [nombre, descripcion, tipo, distancia || null, categoria || 'todos', precio || 0, cupo_maximo || 100, fecha_evento, hora_evento || '08:00:00', lugar]
+    );
+
+    res.status(201).json({ id: result.insertId, message: 'Evento creado exitosamente' });
+  } catch (err) {
+    console.error('Create evento error:', err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // POST /api/inscripciones — User registers for an event
 app.post('/api/inscripciones', authenticateToken, async (req, res) => {
   try {
