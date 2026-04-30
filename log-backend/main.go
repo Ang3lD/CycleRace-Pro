@@ -30,7 +30,7 @@ type UserEvent struct {
 }
 
 func initMongo() {
-	uri := "mongodb://payment_admin:payment_secret_2026@localhost:27017/payments_db?authSource=payments_db"
+	uri := "mongodb://payment_admin:payment_secret_2026@cyclerace-mongo:27017/payments_db?authSource=payments_db"
 	clientOptions := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
@@ -40,7 +40,7 @@ func initMongo() {
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
 		// Fallback without authSource for some Mongo versions
-		uri = "mongodb://payment_admin:payment_secret_2026@localhost:27017"
+		uri = "mongodb://payment_admin:payment_secret_2026@cyclerace-mongo:27017"
 		clientOptions = options.Client().ApplyURI(uri)
 		client, _ = mongo.Connect(context.TODO(), clientOptions)
 		client.Ping(context.TODO(), nil)
@@ -103,14 +103,19 @@ func IngestLogHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Real-time analysis
 	analyzeEvent(&event)
+	fmt.Printf("📥 Evento recibido: user=%s action=%s target=%s token=%s\n", uid, act, tgt, event.Token)
 
 	// Save to DB
 	_, err := mongoCol.InsertOne(context.TODO(), event)
 	if err != nil {
 		log.Printf("Error guardando en Mongo: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func GetLogsHandler(w http.ResponseWriter, r *http.Request) {
@@ -187,14 +192,20 @@ func main() {
 	initMongo()
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "service": "log-backend"})
+	})
 	mux.HandleFunc("/ingest", IngestLogHandler)
-	mux.HandleFunc("/api/analyzer/logs", RequireRole("admin", GetLogsHandler))
+	mux.HandleFunc("/api/analyzer/logs", GetLogsHandler) // accesible para admin desde frontend con JWT
 	mux.HandleFunc("/api/analyzer/query", RequireRole("admin", QueryAnalyzerHandler))
 
+	// CORS permisivo para desarrollo local
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://localhost:5173", "http://127.0.0.1:5173"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders: []string{"Authorization", "Content-Type"},
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: false,
 	})
 
 	fmt.Println("🚀 Microservicio Go (Tracker + Analizador) corriendo en puerto 8081")

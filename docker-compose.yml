@@ -158,6 +158,98 @@ services:
     depends_on:
       - cyclerace-mongo
 
+  # -----------------------------------------------
+  # Microservicios FastAPI
+  # -----------------------------------------------
+  auth-backend:
+    build: ./auth-backend
+    ports:
+      - "8001:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./auth-backend:/app
+    depends_on:
+      - cyclerace-postgres
+    networks:
+      - cyclerace-network
+
+  eventos-backend:
+    build: ./eventos-backend
+    ports:
+      - "8002:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./eventos-backend:/app
+    depends_on:
+      - cyclerace-mysql
+    networks:
+      - cyclerace-network
+
+  corredores-backend:
+    build: ./corredores-backend
+    ports:
+      - "8003:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./corredores-backend:/app
+    depends_on:
+      - cyclerace-redis
+    networks:
+      - cyclerace-network
+
+  tracking-backend:
+    build: ./tracking-backend
+    ports:
+      - "8005:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./tracking-backend:/app
+    depends_on:
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+
+  log-backend:
+    build: ./log-backend
+    ports:
+      - "8082:8081"
+    depends_on:
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+
+  monitor-backend:
+    build: ./monitor-backend
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./monitor-backend:/app
+    depends_on:
+      - auth-backend
+      - eventos-backend
+      - corredores-backend
+      - tracking-backend
+    networks:
+      - cyclerace-network
+
+  # -----------------------------------------------
+  # Frontend React
+  # -----------------------------------------------
+  frontend:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+    depends_on:
+      - monitor-backend
+    networks:
+      - cyclerace-network
+
 # ───────────────────────────────────────────────
 # Volumes
 # ───────────────────────────────────────────────
@@ -180,3 +272,5 @@ networks:
   cyclerace-network:
     driver: bridge
     name: cyclerace-network
+
+

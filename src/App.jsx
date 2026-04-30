@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import { useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import LandingPage from './pages/LandingPage'
@@ -12,6 +13,7 @@ import MisEventosPage from './pages/MisEventosPage'
 import PaymentPage from './pages/PaymentPage'
 import DocsPage from './pages/DocsPage'
 import AnalyzerPage from './pages/AnalyzerPage'
+import StatusPage from './pages/StatusPage'
 
 // Protected route — only authenticated users
 function ProtectedRoute({ children }) {
@@ -31,6 +33,36 @@ function AdminRoute({ children }) {
 }
 
 function App() {
+  const { user } = useAuth(); // Need to get user to send user_id
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      // Find the closest button, a, or element with text
+      const target = e.target.closest('button, a, input, select') || e.target;
+      const targetText = target.innerText || target.name || target.id || target.tagName;
+      
+      const eventData = {
+        user_id: user ? `user_${user.id}` : 'anonymous',
+        action_type: 'CLICK',
+        target_element: targetText.substring(0, 50), // Limit length
+        payload: {
+          path: window.location.pathname,
+          nodeName: target.nodeName,
+          className: target.className
+        }
+      };
+
+      fetch('http://localhost:8082/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData)
+      }).catch(err => console.error('Error tracking click:', err));
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, [user]);
+
   return (
     <div className="app">
       <Navbar />
@@ -62,6 +94,10 @@ function App() {
           
           {/* Hidden route - only accessible via URL bar */}
           <Route path="/docs" element={<DocsPage />} />
+          
+          <Route path="/status" element={
+            <AdminRoute><StatusPage /></AdminRoute>
+          } />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -19,7 +19,7 @@ export default function AnalyzerPage() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('http://localhost:8081/api/analyzer/logs', {
+      const res = await fetch('http://localhost:8082/api/analyzer/logs', {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       if (res.ok) {
@@ -38,7 +38,7 @@ export default function AnalyzerPage() {
     if (!query) return
     
     try {
-      const res = await fetch('http://localhost:8081/api/analyzer/query', {
+      const res = await fetch('http://localhost:8082/api/analyzer/query', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

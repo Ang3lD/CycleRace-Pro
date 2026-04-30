@@ -79,7 +79,7 @@ export default function LoginPage() {
                   className="input-field input-field--icon"
                   placeholder="correo@ejemplo.com"
                   value={form.email}
-                  onChange={e => setForm({...form, email: e.target.value})}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
                   required
                   disabled={loading}
                 />
@@ -96,7 +96,7 @@ export default function LoginPage() {
                   className="input-field input-field--icon"
                   placeholder="••••••••"
                   value={form.password}
-                  onChange={e => setForm({...form, password: e.target.value})}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
                   required
                   disabled={loading}
                 />
@@ -133,7 +133,7 @@ export default function LoginPage() {
           </div>
 
           {/* Demo credentials hint */}
-          <div className="auth-demo-info glass">
+          {/*<div className="auth-demo-info glass">
             <p className="auth-demo-info__title">👤 Usuarios de Prueba</p>
             <div className="auth-demo-info__row">
               <span className="auth-demo-info__label">Admin:</span>
@@ -143,7 +143,7 @@ export default function LoginPage() {
               <span className="auth-demo-info__label">Usuario:</span>
               <code>carlos.mendoza@mail.com</code> / <code>Password123!</code>
             </div>
-          </div>
+          </div>*/}
         </div>
       </div>
     </div>
