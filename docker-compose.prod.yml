@@ -1,0 +1,266 @@
+# ==============================================
+# CycleRace Pro — Docker Compose PRODUCTION (AWS t3.micro optimized)
+# ==============================================
+# Este archivo contiene "Hard Limits" de RAM y optimizaciones de caché.
+#
+# Levantar:   docker compose -f docker-compose.prod.yml up -d
+# Detener:    docker compose -f docker-compose.prod.yml down
+# ==============================================
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: cyclerace-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - node-api
+      - monitor-backend
+      - log-backend
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+
+  cyclerace-postgres:
+    image: postgres:16-alpine
+    container_name: cyclerace-postgres
+    restart: unless-stopped
+    command: postgres -c shared_buffers=64MB -c work_mem=4MB
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_secret_2026
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  cyclerace-mysql:
+    image: mysql:8.0
+    container_name: cyclerace-mysql
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --performance_schema=OFF --innodb_buffer_pool_size=64M
+    environment:
+      MYSQL_DATABASE: registration_db
+      MYSQL_USER: registration_user
+      MYSQL_PASSWORD: registration_secret_2026
+      MYSQL_ROOT_PASSWORD: root_secret_2026
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  cyclerace-mongo:
+    image: mongo:7
+    container_name: cyclerace-mongo
+    restart: unless-stopped
+    command: --wiredTigerCacheSizeGB 0.1
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: payment_admin
+      MONGO_INITDB_ROOT_PASSWORD: payment_secret_2026
+      MONGO_INITDB_DATABASE: payment_db
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/init/mongo:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  cyclerace-redis:
+    image: redis:7-alpine
+    container_name: cyclerace-redis
+    restart: unless-stopped
+    command: redis-server --requirepass competitor_secret_2026
+    volumes:
+      - redis_data:/data
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "competitor_secret_2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+  cyclerace-mongo-reports:
+    image: mongo:7
+    container_name: cyclerace-mongo-reports
+    restart: unless-stopped
+    command: --wiredTigerCacheSizeGB 0.1
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: reports_admin
+      MONGO_INITDB_ROOT_PASSWORD: reports_secret_2026
+      MONGO_INITDB_DATABASE: reports_db
+    volumes:
+      - mongo_reports_data:/data/db
+      - ./docker/init/mongo-reports:/docker-entrypoint-initdb.d
+    networks:
+      - cyclerace-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+  node-api:
+    build: .
+    container_name: cyclerace-node-api
+    command: ["node", "server/api.js"]
+    volumes:
+      - ./server:/app/server
+    depends_on:
+      - cyclerace-postgres
+      - cyclerace-mysql
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+
+  auth-backend:
+    build: ./auth-backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      - cyclerace-postgres
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  eventos-backend:
+    build: ./eventos-backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      - cyclerace-mysql
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  corredores-backend:
+    build: ./corredores-backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      - cyclerace-redis
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  tracking-backend:
+    build: ./tracking-backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  log-backend:
+    build: ./log-backend
+    depends_on:
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+
+  monitor-backend:
+    build: ./monitor-backend
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+    depends_on:
+      - auth-backend
+      - eventos-backend
+      - corredores-backend
+      - tracking-backend
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+
+  frontend:
+    build: .
+    # En vez de 'npm run dev', construimos el proyecto y lo servimos estáticamente (producción)
+    command: ["sh", "-c", "npm run build && npm run preview -- --host 0.0.0.0 --port 5173"]
+    depends_on:
+      - monitor-backend
+    networks:
+      - cyclerace-network
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+volumes:
+  postgres_data:
+    driver: local
+  mysql_data:
+    driver: local
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongo_reports_data:
+    driver: local
+
+networks:
+  cyclerace-network:
+    driver: bridge
+    name: cyclerace-network
