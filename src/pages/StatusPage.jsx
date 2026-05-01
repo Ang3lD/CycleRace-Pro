@@ -8,7 +8,7 @@ const StatusPage = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/status');
+        const response = await fetch('/monitor/api/status');
         const data = await response.json();
         setServicios(data.microservicios || []);
       } catch (error) {

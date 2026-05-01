@@ -52,7 +52,7 @@ function App() {
         }
       };
 
-      fetch('http://localhost:8082/ingest', {
+      fetch('/analyzer/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)

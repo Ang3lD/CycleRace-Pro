@@ -17,12 +17,12 @@ const JWT_SECRET = 'cyclerace_jwt_secret_2026_lucars';
 const JWT_EXPIRES = '2h';
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json());
 
 // ─── PostgreSQL Connection (Auth Service) ───
 const pgPool = new Pool({
-  host: 'localhost',
+  host: process.env.PG_HOST || 'cyclerace-postgres',
   port: 5432,
   database: 'auth_db',
   user: 'auth_user',
@@ -35,7 +35,7 @@ import mysql from 'mysql2/promise';
 let mysqlPool;
 async function initMySQL() {
   mysqlPool = await mysql.createPool({
-    host: 'localhost',
+    host: process.env.MYSQL_HOST || 'cyclerace-mysql',
     port: 3306,
     database: 'registration_db',
     user: 'registration_user',
@@ -47,7 +47,7 @@ async function initMySQL() {
 }
 
 // ─── MongoDB Connection (Payments & Reports) ───
-const mongoUrl = 'mongodb://payment_admin:payment_secret_2026@localhost:27017';
+const mongoUrl = process.env.MONGO_URL || 'mongodb://payment_admin:payment_secret_2026@cyclerace-mongo:27017';
 const mongoClient = new MongoClient(mongoUrl);
 let paymentsCol;
 

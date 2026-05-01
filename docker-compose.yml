@@ -1,13 +1,35 @@
 # ==============================================
 # CycleRace Pro — Docker Compose
 # 5 Bases de Datos Independientes (Database per Service)
+# + Nginx Reverse Proxy (Puerto Único 80)
 # ==============================================
 # Levantar:   docker compose up -d
 # Detener:    docker compose down
 # Con datos:  docker compose down -v  (elimina volúmenes)
 # ==============================================
+# ACCEDER:    http://localhost  (un solo puerto, sin CORS)
+# ==============================================
 
 services:
+
+  # ───────────────────────────────────────────────
+  # NGINX — Reverse Proxy (Punto de entrada único)
+  # ───────────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: cyclerace-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - node-api
+      - monitor-backend
+      - log-backend
+    networks:
+      - cyclerace-network
 
   # ───────────────────────────────────────────────
   # 1. PostgreSQL — Auth Service
@@ -16,8 +38,6 @@ services:
     image: postgres:16-alpine
     container_name: cyclerace-postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_DB: auth_db
       POSTGRES_USER: auth_user
@@ -41,8 +61,6 @@ services:
     container_name: cyclerace-mysql
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    ports:
-      - "3306:3306"
     environment:
       MYSQL_DATABASE: registration_db
       MYSQL_USER: registration_user
@@ -66,8 +84,6 @@ services:
     image: mongo:7
     container_name: cyclerace-mongo
     restart: unless-stopped
-    ports:
-      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: payment_admin
       MONGO_INITDB_ROOT_PASSWORD: payment_secret_2026
@@ -90,8 +106,6 @@ services:
     image: redis:7-alpine
     container_name: cyclerace-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     command: redis-server --requirepass competitor_secret_2026
     volumes:
       - redis_data:/data
@@ -159,12 +173,27 @@ services:
       - cyclerace-mongo
 
   # -----------------------------------------------
-  # Microservicios FastAPI
+  # API Principal (Node.js / Express)
+  # Auth, Eventos, Inscripciones, Dashboard
+  # -----------------------------------------------
+  node-api:
+    build: .
+    container_name: cyclerace-node-api
+    command: ["node", "server/api.js"]
+    volumes:
+      - ./server:/app/server
+    depends_on:
+      - cyclerace-postgres
+      - cyclerace-mysql
+      - cyclerace-mongo
+    networks:
+      - cyclerace-network
+
+  # -----------------------------------------------
+  # Microservicios FastAPI (Health Check)
   # -----------------------------------------------
   auth-backend:
     build: ./auth-backend
-    ports:
-      - "8001:8000"
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./auth-backend:/app
@@ -175,8 +204,6 @@ services:
 
   eventos-backend:
     build: ./eventos-backend
-    ports:
-      - "8002:8000"
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./eventos-backend:/app
@@ -187,8 +214,6 @@ services:
 
   corredores-backend:
     build: ./corredores-backend
-    ports:
-      - "8003:8000"
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./corredores-backend:/app
@@ -199,8 +224,6 @@ services:
 
   tracking-backend:
     build: ./tracking-backend
-    ports:
-      - "8005:8000"
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./tracking-backend:/app
@@ -211,8 +234,6 @@ services:
 
   log-backend:
     build: ./log-backend
-    ports:
-      - "8082:8081"
     depends_on:
       - cyclerace-mongo
     networks:
@@ -220,8 +241,6 @@ services:
 
   monitor-backend:
     build: ./monitor-backend
-    ports:
-      - "8000:8000"
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./monitor-backend:/app
@@ -234,14 +253,12 @@ services:
       - cyclerace-network
 
   # -----------------------------------------------
-  # Frontend React
+  # Frontend React (Vite Dev Server)
   # -----------------------------------------------
   frontend:
     build: .
     ports:
       - "5173:5173"
-    environment:
-      - VITE_API_URL=http://localhost:8000
     volumes:
       - ./src:/app/src
       - ./public:/app/public
@@ -272,5 +289,3 @@ networks:
   cyclerace-network:
     driver: bridge
     name: cyclerace-network
-
-
