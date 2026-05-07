@@ -1,0 +1,95 @@
+.corredor-page {
+  padding: 100px 0 var(--space-3xl);
+  min-height: 100vh;
+  position: relative;
+}
+.corredor-page__bg { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.corredor-page__orb { position: absolute; width: 500px; height: 500px; background: var(--orange-600); filter: blur(150px); opacity: 0.08; top: -100px; right: -100px; border-radius: 50%; }
+
+.corredor-layout { display: grid; grid-template-columns: 340px 1fr; gap: var(--space-2xl); align-items: start; }
+
+/* QR Card */
+.corredor-qr-section { position: sticky; top: 100px; }
+.corredor-qr-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--space-md); padding: var(--space-2xl);
+  text-align: center; border-radius: var(--radius-xl);
+}
+.corredor-qr-card__badge {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  padding: 4px 14px; font-size: 0.8rem; font-weight: 700;
+  background: rgba(16,185,129,0.1); color: var(--emerald-400);
+  border-radius: var(--radius-full);
+}
+.corredor-qr-card__qr {
+  color: var(--orange-400);
+  padding: var(--space-xl);
+  background: rgba(249,115,22,0.05);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(249,115,22,0.15);
+}
+.corredor-qr-card__number {
+  font-family: var(--font-display); font-size: 2.5rem; font-weight: 900;
+  background: var(--gradient-brand); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.corredor-qr-card__name { font-weight: 600; font-size: 1rem; }
+.corredor-qr-card__race { font-size: 0.85rem; color: var(--text-muted); }
+.corredor-qr-card__actions { display: flex; gap: var(--space-sm); margin-top: var(--space-sm); width: 100%; }
+.corredor-qr-card__actions .btn { flex: 1; }
+
+/* Info */
+.corredor-info__title { font-size: 1.8rem; font-weight: 900; }
+.corredor-info__sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; margin-bottom: var(--space-xl); }
+
+/* Timeline */
+.corredor-timeline {
+  display: flex; flex-direction: column;
+  padding: var(--space-xl); border-radius: var(--radius-xl);
+  margin-bottom: var(--space-lg);
+}
+.corredor-timeline__step {
+  display: flex; align-items: center; gap: var(--space-md);
+}
+.corredor-timeline__step--done .corredor-timeline__dot { color: var(--emerald-400); background: rgba(16,185,129,0.15); }
+.corredor-timeline__step--done .corredor-timeline__label { color: var(--text-primary); }
+.corredor-timeline__dot {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-glass); color: var(--text-muted);
+  flex-shrink: 0;
+}
+.corredor-timeline__label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+.corredor-timeline__date { font-size: 0.8rem; color: var(--text-muted); }
+.corredor-timeline__line {
+  width: 2px; height: 24px; margin-left: 17px;
+  background: var(--dark-600);
+}
+.corredor-timeline__line--done { background: var(--emerald-400); }
+
+/* Data cards */
+.corredor-data, .corredor-event {
+  padding: var(--space-xl); border-radius: var(--radius-xl);
+  margin-bottom: var(--space-lg);
+}
+.corredor-data h3, .corredor-event h3 {
+  font-size: 1rem; font-weight: 700; margin-bottom: var(--space-lg);
+}
+.corredor-data__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+.corredor-data__item {
+  display: flex; align-items: flex-start; gap: var(--space-sm);
+}
+.corredor-data__item svg { color: var(--orange-400); margin-top: 2px; flex-shrink: 0; }
+.corredor-data__item span { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.corredor-data__item p { font-size: 0.9rem; font-weight: 500; margin-top: 2px; }
+
+.corredor-event__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+.corredor-event__item { display: flex; align-items: center; gap: var(--space-md); }
+.corredor-event__item svg { color: var(--orange-400); flex-shrink: 0; }
+.corredor-event__item span { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.corredor-event__item p { font-size: 0.9rem; font-weight: 500; margin-top: 2px; }
+
+@media (max-width: 768px) {
+  .corredor-layout { grid-template-columns: 1fr; }
+  .corredor-qr-section { position: static; }
+  .corredor-data__grid, .corredor-event__grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,255 @@
+/* ===== MIS EVENTOS PAGE ===== */
+.mis-eventos {
+  min-height: 100vh;
+  padding: 120px 0 var(--space-3xl);
+  position: relative;
+}
+
+.mis-eventos__bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mis-eventos__orb {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: var(--violet-400);
+  top: -150px;
+  left: -150px;
+  filter: blur(180px);
+  opacity: 0.06;
+}
+
+/* User Header Card */
+.mis-eventos__header {
+  margin-bottom: var(--space-2xl);
+}
+
+.mis-eventos__user-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-2xl);
+}
+
+.mis-eventos__avatar {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  border-radius: 50%;
+  background: var(--gradient-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+}
+
+.mis-eventos__user-name {
+  font-size: 1.6rem;
+  margin-bottom: var(--space-xs);
+}
+
+.mis-eventos__user-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-md);
+}
+
+.mis-eventos__user-details span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mis-eventos__user-stats {
+  display: flex;
+  gap: var(--space-xl);
+}
+
+.mis-eventos__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mis-eventos__stat-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--orange-400);
+}
+
+.mis-eventos__stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Section title */
+.mis-eventos__section-title {
+  font-size: 1.3rem;
+  margin-bottom: var(--space-xl);
+  color: var(--text-primary);
+}
+
+/* Empty state */
+.mis-eventos__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4xl);
+  text-align: center;
+  color: var(--text-muted);
+  gap: var(--space-md);
+}
+
+.mis-eventos__empty h3 {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+}
+
+/* Events List */
+.mis-eventos__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.mis-evento-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-xl);
+  transition: all var(--transition-base);
+}
+
+.mis-evento-card:hover {
+  border-color: var(--border-default);
+  transform: translateX(4px);
+}
+
+.mis-evento-card__left {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  flex: 1;
+}
+
+.mis-evento-card__tipo-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.mis-evento-card__info h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: var(--space-xs);
+}
+
+.mis-evento-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.mis-evento-card__meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.mis-evento-card__inscripcion-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.mis-evento-card__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-sm);
+  min-width: 120px;
+}
+
+.mis-evento-card__estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+}
+
+.mis-evento-card__estado--validado {
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.mis-evento-card__estado--pendiente {
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.mis-evento-card__estado--rechazado {
+  background: rgba(251, 113, 133, 0.1);
+}
+
+.mis-evento-card__numero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--orange-400);
+}
+
+.mis-evento-card__numero-value {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  .mis-eventos__user-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-xl);
+  }
+
+  .mis-eventos__user-details {
+    justify-content: center;
+  }
+
+  .mis-evento-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+  }
+
+  .mis-evento-card__right {
+    align-items: flex-start;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
