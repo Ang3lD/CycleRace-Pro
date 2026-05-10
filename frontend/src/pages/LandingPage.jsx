@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom'
 import {
   Bike, ArrowRight, QrCode, Users, CreditCard,
   CheckCircle2, Zap, Timer, Trophy, Calendar,
-  MapPin, Star, Wrench, Eye, Route, Mountain
+  MapPin, Star, Wrench, Eye, Route, Mountain,
+  Smartphone, Download
 } from 'lucide-react'
 import './LandingPage.css'
 
@@ -191,6 +192,57 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* APP DOWNLOAD */}
+      <section className="app-download-section" id="app">
+        <div className="container">
+          <div className="app-download-box glass">
+            <div className="app-download-box__orb" />
+            <div className="app-download-content">
+              <div className="badge"><Smartphone size={14} /> Aplicación Móvil</div>
+              <h2 className="app-download-title">Lleva tus eventos en el bolsillo</h2>
+              <p className="app-download-desc">
+                Instala nuestra app oficial (Progressive Web App) en tu dispositivo. Accede más rápido, lleva tus códigos QR sin conexión y recibe notificaciones.
+              </p>
+              <div className="app-download-features">
+                <div className="app-download-feature"><CheckCircle2 size={18} /> Instalación directa y segura</div>
+                <div className="app-download-feature"><CheckCircle2 size={18} /> Acceso rápido desde tu inicio</div>
+                <div className="app-download-feature"><CheckCircle2 size={18} /> No ocupa espacio de almacenamiento</div>
+              </div>
+              <button 
+                onClick={() => {
+                  window.location.href = `${window.location.protocol}//${window.location.hostname}:8081`;
+                }} 
+                className="btn btn-primary btn-lg" 
+                style={{ backgroundColor: 'var(--sky-500)', borderColor: 'var(--sky-500)' }}
+              >
+                <Download size={18} /> Obtener App
+              </button>
+            </div>
+            <div className="app-download-visual">
+              <div className="app-mockup">
+                <div className="app-mockup-screen">
+                  <div className="app-mockup-header">
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--bg-elevated)' }}></div>
+                    <div style={{ width: 100, height: 16, borderRadius: 8, background: 'var(--bg-elevated)' }}></div>
+                  </div>
+                  <div className="app-mockup-card">
+                    <div style={{ width: '100%', height: 120, borderRadius: 8, background: 'var(--gradient-brand-soft)', marginBottom: 12 }}></div>
+                    <div style={{ width: '80%', height: 14, borderRadius: 4, background: 'var(--text-primary)', marginBottom: 8 }}></div>
+                    <div style={{ width: '60%', height: 12, borderRadius: 4, background: 'var(--text-muted)' }}></div>
+                  </div>
+                  <div className="app-mockup-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="app-mockup-qr">
+                      <div className="app-mockup-qr-inner"></div>
+                    </div>
+                    <div style={{ width: '50%', height: 16, borderRadius: 4, background: 'var(--text-primary)' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -166,7 +166,7 @@ services:
     container_name: cyclerace-mongo-express
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "8082:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: payment_admin
       ME_CONFIG_MONGODB_ADMINPASSWORD: payment_secret_2026
@@ -273,6 +273,29 @@ services:
       - monitor-backend
     networks:
       - cyclerace-network
+
+  # -----------------------------------------------
+  # Frontend Móvil (React Native / Expo)
+  # -----------------------------------------------
+  mobile:
+    build: ./mobile
+    container_name: cyclerace-mobile
+    ports:
+      - "8081:8081"
+      - "19000:19000"
+      - "19001:19001"
+    volumes:
+      - ./mobile:/app
+      - /app/node_modules
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+      - HOST=0.0.0.0
+      - WEB_HOST=0.0.0.0
+    networks:
+      - cyclerace-network
+    depends_on:
+      - node-api
 
 # ───────────────────────────────────────────────
 # Volumes
